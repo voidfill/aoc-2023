@@ -1,10 +1,10 @@
 purescript 
 julia
-go surely
+go
+elixir
+zig
 
-elixir?
 haskell?
-zig?
 rust?
 
-typescript whenever
+typescript whenever1
