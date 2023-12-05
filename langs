@@ -3,6 +3,7 @@ julia
 go
 elixir
 zig
+crystal
 
 haskell?
 rust?
