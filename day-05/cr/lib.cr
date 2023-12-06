@@ -26,7 +26,7 @@ def one(input : String): Int64 | Nil
 		end
 	end
 
-	state.min_by { |x| x }
+	state.min
 end
 
 
@@ -34,15 +34,14 @@ def two(input : String) : Int64 | Nil
 	split = input.split("\n\n")
 	seeds = split.shift().split(" ")
 	seeds.shift()
-	state = Array(Range(Int64, Int64)).new
+	unmapped = Array(Range(Int64, Int64)).new
 
 	(0..(seeds.size / 2 - 1)).each do |i|
 		b = seeds[i * 2].to_i64
 		e = seeds[i * 2 + 1].to_i64 + b
-		state << (b..e)
+		unmapped << (b..e)
 	end
 
-	Log.info { "state: #{state}" }
 	split.each do |m|
 		lines = m.split("\n")
 		op = lines.shift()
@@ -50,71 +49,48 @@ def two(input : String) : Int64 | Nil
 			x.split(" ").map(&.to_i64)
 		end
 
-		newState = Array(Range(Int64, Int64)).new
+		mapped = Array(Range(Int64, Int64)).new
+		leftovers = Array(Range(Int64, Int64)).new
 
-		state.each do |range|
-			# rule = rules.find do |x|
-			# 	(range.begin >= x[1] && range.begin < x[1] + x[2]) || (range.end >= x[1] && range.end < x[1] + x[2]) || (range.begin < x[1] && range.end > x[1] + x[2])
-			# end
+		rules.each do |rule|
+			while unmapped.size > 0
+				r = unmapped.pop()
 
-			# if !rule
-			# 	newState << range
-			# else
-			# 	newState.concat(applyRule(rule, range))
-			# end
+				if r.begin >= rule[1] + rule[2] || r.end < rule[1]
+					leftovers << r
+					next
+				end
 
-			didApply = false
-			rules.each do |rule|
-				a = applyRule(rule, range)
-				if a
-					newState.concat(a)
-					didApply = true
+				if r.begin >= rule[1] && r.begin < rule[1] + rule[2] && r.end < rule[1] + rule[2]
+					mapped << (r.begin + rule[0] - rule[1]..r.end + rule[0] - rule[1])
+					next
+				end
+
+				if r.begin < rule[1] && r.end >= rule[1] + rule[2]
+					mapped << (rule[0]..rule[0] + rule[2])
+					leftovers << (r.begin..rule[1] - 1)
+					leftovers << (rule[1] + rule[2]..r.end)
+					next
+				end
+
+				if r.begin < rule[1] && r.end >= rule[1] && r.end < rule[1] + rule[2]
+					mapped << (rule[0]..r.end + rule[0] - rule[1])
+					leftovers << (r.begin..rule[1] - 1)
+					next
+				end
+
+				if r.begin >= rule[1] && r.begin < rule[1] + rule[2] && r.end >= rule[1] + rule[2]
+					mapped << (r.begin + rule[0] - rule[1]..rule[0] + rule[2])
+					leftovers << (rule[1] + rule[2]..r.end)
+					next
 				end
 			end
-
-			if !didApply
-				newState << range
-			end
+			unmapped = leftovers
+			leftovers = Array(Range(Int64, Int64)).new
 		end
-		
-		state = newState
-		Log.info { "state: #{state}, op: #{op}" }
+
+		unmapped.concat(mapped)
 	end
 
-	state.map { |x| x.begin }.min
+	unmapped.min_by(&.begin).begin
 end
-
-
-def applyRule(rule : Array(Int64), range : Range(Int64, Int64)): Array(Range(Int64, Int64)) | Nil
-	b = range.begin
-	e = range.end
-
-	if b >= rule[1] + rule[2] || e < rule[1]
-		return nil
-	end
-
-	# 1. if range is completely inside rule, return fully mapped range.
-	if b >= rule[1] && e <= rule[1] + rule[2]
-		Log.info { "completely inside. rule: #{rule}, range: #{range}"}
-		return [(b + rule[0] - rule[1])..(e + rule[0] - rule[1])]
-	end
-
-	# if range is overlapping both ends of rule, return unmapped, mapped, unmapped
-	if b < rule[1] && e > rule[1] + rule[2]
-		Log.info { "overlapping both ends. rule: #{rule}, range: #{range}"}
-		return [(b..rule[1] - 1), (rule[0]..(rule[0] + rule[2] - 1)), (rule[1] + rule[2]..e)]
-	end
-
-	if b < rule[1] && e < rule[1] + rule[2]
-		Log.info { "partially before rule: #{rule}, range: #{range}"}
-		return [(b..rule[1] - 1), (rule[0]..(e + rule[0] - rule[1]))]
-	end
-
-	# 3.2 range after rule
-	if b > rule[1] && e > rule[1] + rule[2]
-		Log.info { "partially after, rule: #{rule}, range: #{range}"}
-		return [(b - rule[1] + rule[0]..(rule[0] + rule[2] - 1)), (rule[1] + rule[2]..e)]
-	end
-end
-
-
