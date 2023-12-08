@@ -1,0 +1,19 @@
+require "./lib.cr"
+require "spec"
+
+describe "Example input" do
+	describe "one" do
+		input = File.read("../example1.txt") 
+		it "should return 2" do
+			one(input).should eq 2
+		end
+	end
+
+	describe "two" do
+		input = File.read("../example2.txt") 
+		it "should return 6" do
+			two(input).should eq 6
+		end
+	end
+end
+
