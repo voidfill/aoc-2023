@@ -1,0 +1,27 @@
+name: cr
+version: 0.1.0
+
+targets:
+  tests:
+    main: ./tests.cr
+  main:
+    main: ./main.cr
+
+  
+
+# authors:
+#   - name <email@example.com>
+
+# description: |
+#   Short description of cr
+
+# dependencies:
+#   pg:
+#     github: will/crystal-pg
+#     version: "~> 0.5"
+
+# development_dependencies:
+#   webmock:
+#     github: manastech/webmock.cr
+
+# license: MIT
